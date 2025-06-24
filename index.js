@@ -259,6 +259,65 @@ app.post('/admin-login', async (req, res) => {
     res.status(500).send({ error: 'Error al verificar el login' });
   }
 });
+// NUEVA RUTA PARA REGISTRAR VENTA CON MULTIPLES BOLETAS
+app.post('/registrar-venta', async (req, res) => {
+  const { correo, boletas, valor, vendedor } = req.body;
+
+  if (!correo || !boletas || !valor || !vendedor || !Array.isArray(boletas)) {
+    return res.status(400).send({ error: 'Faltan campos requeridos o boletas inválidas' });
+  }
+
+  try {
+    const ventaRef = await db.collection('ventas').add({
+      correo,
+      valor,
+      vendedor,
+      fecha: new Date().toISOString(),
+      cantidad: boletas.length
+    });
+
+    const buffers = [];
+
+    for (const b of boletas) {
+      const nuevoDoc = await compradoresRef.add({
+        nombre: b.nombre,
+        cedula: b.cedula,
+        tipoEntrada: b.tipo,
+        correo,
+        usado: false,
+        ventaId: ventaRef.id,
+        creado: new Date().toISOString()
+      });
+
+      const imagen = await generarBoletaVisual(b.nombre, b.cedula, b.tipo, nuevoDoc.id);
+
+      buffers.push({
+        filename: `entrada-${b.nombre}.png`,
+        content: imagen,
+        cid: `qr-${nuevoDoc.id}`
+      });
+    }
+
+    const mailOptions = {
+      from: 'gueparsexparty@gmail.com',
+      to: correo,
+      subject: 'Tus entradas para la Gueparsex Party 🎟️',
+      html: `
+        <h2>¡Hola!</h2>
+        <p>Adjuntamos tus boletas digitales. Preséntalas en la entrada del evento.</p>
+        <p>¡Nos vemos pronto! 😉</p>
+      `,
+      attachments: buffers
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).send({ mensaje: 'Venta registrada y boletas enviadas' });
+  } catch (error) {
+    console.error('❌ Error registrando venta:', error);
+    res.status(500).send({ error: 'Error en el registro de la venta' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en puerto ${PORT}`);
