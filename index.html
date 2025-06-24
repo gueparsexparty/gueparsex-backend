@@ -2,40 +2,84 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Verificador QR</title>
+  <title>Verificador QR - Gueparsex Party</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      padding: 1rem;
+      text-align: center;
     }
-    #result {
-      margin-top: 20px;
-      font-size: 1.5em;
-      font-weight: bold;
-      padding: 10px 20px;
-      border-radius: 10px;
-    }
-    video {
+    #reader {
       width: 300px;
-      height: auto;
-      border: 2px solid #fff;
-      border-radius: 10px;
+      margin: auto;
+    }
+    #resultado {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Escáner de Entradas</h1>
-  <video id="video" autoplay></video>
-  <div id="result">Escaneando...</div>
-  <script src="https://unpkg.com/@zxing/browser@latest"></script>
-  <script src="script.js"></script>
+  <h2>📲 Escáner QR - Entrada</h2>
+  <div id="reader"></div>
+  <div id="resultado">Esperando escaneo...</div>
+
+  <script>
+    function verificarEntrada(id) {
+      fetch(`http://192.168.1.1:3000/verificar/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById('resultado').innerText = '❌ Entrada no válida';
+          } else if (data.valido) {
+            document.getElementById('resultado').innerHTML = `
+              ✅ Entrada válida<br>
+              Nombre: ${data.nombre}<br>
+              Cédula: ${data.cedula}<br>
+              Tipo: ${data.tipoEntrada}
+            `;
+          } else {
+            document.getElementById('resultado').innerText = '⚠️ Entrada ya fue utilizada';
+          }
+        })
+        .catch(() => {
+          document.getElementById('resultado').innerText = '❌ Error al verificar';
+        });
+    }
+
+    const scanner = new Html5Qrcode("reader");
+
+   Html5Qrcode.getCameras().then(cameras => {
+  if (cameras && cameras.length) {
+    // Buscar cámara trasera si es posible
+    const backCamera = cameras.find(cam => cam.label.toLowerCase().includes('back')) || cameras[0];
+
+    scanner.start(
+      backCamera.id,
+
+          {
+            fps: 10,
+            qrbox: 250
+          },
+          qrCodeMessage => {
+            scanner.stop();
+            verificarEntrada(qrCodeMessage);
+            setTimeout(() => {
+              document.getElementById('resultado').innerText = 'Esperando escaneo...';
+              scanner.start(cameras[0].id, { fps: 10, qrbox: 250 }, qrCodeMessage => {
+                scanner.stop();
+                verificarEntrada(qrCodeMessage);
+              });
+            }, 5000); // espera 5 segundos antes de volver a escanear
+          },
+          error => {
+            // No mostrar errores de escaneo
+          }
+        );
+      }
+    });
+  </script>
 </body>
 </html>
