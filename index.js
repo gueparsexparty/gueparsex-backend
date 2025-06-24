@@ -136,7 +136,6 @@ app.post('/verificar', async (req, res) => {
       });
     }
 
-    await compradoresRef.doc(qrData).update({ usado: true });
 
     res.status(200).send({
       valido: true,
