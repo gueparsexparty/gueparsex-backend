@@ -35,8 +35,8 @@ async function generarBoletaVisual(nombre, cedula, tipoEntrada, idQR) {
   const titulos = ['Nombre:', 'Cédula:', 'Tipo:'];
   const datos = [nombre, cedula, tipoEntrada];
 
-  const leftX = 600;
-  const rightX = 600;
+  const leftX = 150;
+  const rightX = 750;
   let yBase = 730;
   const lineHeight = 70;
 
