@@ -13,6 +13,42 @@ const express = require('express');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
+const { createCanvas, loadImage, registerFont } = require('canvas');
+const QRCode = require('qrcode');
+const path = require('path');
+
+// Registra la fuente para los textos
+registerFont(path.join(__dirname, 'DroidSans-Bold.ttf'), { family: 'DroidSans' });
+
+// Función para generar la boleta con fondo, texto y QR
+async function generarBoletaVisual(nombre, cedula, tipoEntrada, idQR) {
+  const ancho = 1080;
+  const alto = 1920;
+
+  const canvas = createCanvas(ancho, alto);
+  const ctx = canvas.getContext('2d');
+
+  // Fondo
+  const fondo = await loadImage(path.join(__dirname, 'boleta_base.jpg'));
+  ctx.drawImage(fondo, 0, 0, ancho, alto);
+
+  // Texto: nombre, cédula, tipo
+  ctx.font = 'bold 48px DroidSans';
+  ctx.fillStyle = '#ffffff';
+
+  ctx.fillText(`Nombre: ${nombre}`, 100, 730);
+  ctx.fillText(`Cédula: ${cedula}`, 100, 800);
+  ctx.fillText(`Tipo: ${tipoEntrada}`, 100, 870);
+
+  // Generar QR como imagen
+  const qrDataUrl = await QRCode.toDataURL(idQR);
+  const qrImage = await loadImage(qrDataUrl);
+  ctx.drawImage(qrImage, 290, 970, 500, 500); // posición centrada
+
+  return canvas.toBuffer(); // devolvemos el PNG en buffer
+}
+
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -124,32 +160,27 @@ app.post('/registrar', async (req, res) => {
 
     const compradorId = nuevoDoc.id;
 
-    // Generar el código QR (codificamos el ID del documento)
-    const qrDataURL = await QRCode.toDataURL(compradorId);
+// Generar la imagen personalizada con fondo, texto y QR
+const imagenBoleta = await generarBoletaVisual(nombre, cedula, tipoEntrada, compradorId);
 
-    // Crear contenido del correo
-    const mailOptions = {
-      from: 'TU_CORREO@gmail.com',
-      to: correo,
-      subject: 'Tu entrada para el evento 🎟️',
-      html: `
-        <h2>¡Hola ${nombre}!</h2>
-        <p>Gracias por comprar tu entrada para la Gueparsex Party.</p>
-        <p><strong>Tipo de entrada:</strong> ${tipoEntrada}</p>
-        <p><strong>Cédula:</strong> ${cedula}</p>
-        <p>Presenta este código QR en la entrada:</p>
-        <img src="cid:qrimage" alt="QR Code" style="width:200px;" />
-        <p>Nos vemos pronto 😉</p>
-      `,
-	  attachments: [
-  {
-    filename: 'entrada.png',
-    content: qrDataURL.split("base64,")[1],
-    encoding: 'base64',
-    cid: 'qrimage' // Esto enlaza la imagen con el <img src="cid:qrimage" />
-  }
-]
-    };
+const mailOptions = {
+  from: 'gueparsexparty@gmail.com',
+  to: correo,
+  subject: 'Tu entrada para la Gueparsex Party 🎟️',
+  html: `
+    <h2>¡Hola ${nombre}!</h2>
+    <p>Adjuntamos tu boleta en formato digital. Preséntala en la entrada del evento.</p>
+    <p>¡Nos vemos pronto! 😉</p>
+  `,
+  attachments: [
+    {
+      filename: 'boleta.png',
+      content: imagenBoleta,
+      cid: 'boleta'
+    }
+  ]
+};
+
 
     // Enviar el correo
     await transporter.sendMail(mailOptions);
