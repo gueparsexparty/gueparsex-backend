@@ -14,7 +14,6 @@ const admin = require('firebase-admin');
 const cors = require('cors');
 
 const { createCanvas, loadImage, registerFont } = require('canvas');
-const QRCode = require('qrcode');
 const path = require('path');
 
 // Registra la fuente para los textos
