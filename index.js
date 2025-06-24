@@ -162,6 +162,7 @@ app.post('/registrar', async (req, res) => {
 
 // Generar la imagen personalizada con fondo, texto y QR
 const imagenBoleta = await generarBoletaVisual(nombre, cedula, tipoEntrada, compradorId);
+console.log('✅ Imagen generada correctamente');
 
 const mailOptions = {
   from: 'gueparsexparty@gmail.com',
@@ -172,13 +173,14 @@ const mailOptions = {
     <p>Adjuntamos tu boleta en formato digital. Preséntala en la entrada del evento.</p>
     <p>¡Nos vemos pronto! 😉</p>
   `,
-  attachments: [
-    {
-      filename: 'boleta.png',
-      content: imagenBoleta,
-      cid: 'boleta'
-    }
-  ]
+attachments: [
+  {
+    filename: 'entrada.png',
+    content: imagenBoleta,
+    cid: 'qrimage'
+  }
+]
+
 };
 
 
