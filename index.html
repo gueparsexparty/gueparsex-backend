@@ -28,7 +28,12 @@
 
   <script>
     function verificarEntrada(id) {
-      fetch(`http://192.168.1.1:3000/verificar/${id}`)
+      fetch(`https://gueparsex-backend.vercel.app/verificar`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ qrData: id })
+	    })
+
         .then(res => res.json())
         .then(data => {
           if (data.error) {
