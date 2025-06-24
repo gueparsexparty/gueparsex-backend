@@ -90,21 +90,20 @@ app.get('/verificar/:id', async (req, res) => {
     const data = doc.data();
 
     if (data.usado) {
-      return res.status(200).send({
-        valido: false,
-        mensaje: 'Esta entrada ya fue utilizada',
-        ...data
-      });
-    }
+  return res.status(200).send({
+    valido: false,
+    mensaje: 'Esta entrada ya fue utilizada',
+    ...data
+  });
+}
 
-    // Marcar como usada
-    await compradoresRef.doc(id).update({ usado: true });
+// No marcamos como usada aún
+res.status(200).send({
+  valido: true,
+  mensaje: 'Entrada válida, acceso permitido',
+  ...data
+});
 
-    res.status(200).send({
-      valido: true,
-      mensaje: 'Entrada válida, acceso permitido',
-      ...data
-    });
 
   } catch (error) {
     console.error(error);
@@ -151,6 +150,21 @@ app.post('/verificar', async (req, res) => {
   }
 });
 
+app.post('/marcar-usada', async (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).send({ success: false, error: 'ID no proporcionado' });
+  }
+
+  try {
+    await compradoresRef.doc(id).update({ usado: true });
+    res.send({ success: true });
+  } catch (error) {
+    console.error('Error marcando boleta como usada:', error);
+    res.status(500).send({ success: false, error: 'Error al actualizar' });
+  }
+});
 
 // Ruta para registrar un nuevo comprador
 app.post('/registrar', async (req, res) => {
