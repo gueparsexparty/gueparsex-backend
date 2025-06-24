@@ -229,6 +229,9 @@ const PORT = process.env.PORT || 3000;
 
 app.post('/admin-login', async (req, res) => {
   const { usuario, password } = req.body;
+  
+  console.log("🔍 Login recibido:", { usuario, password });
+
 
   if (!usuario || !password) {
     return res.status(400).send({ error: 'Faltan campos requeridos' });
@@ -240,6 +243,10 @@ app.post('/admin-login', async (req, res) => {
       .where('usuario', '==', usuario)
       .where('password', '==', password)
       .get();
+
+	snapshot.forEach(doc => {
+  console.log("📄 Documento encontrado:", doc.data());
+});
 
     if (snapshot.empty) {
       return res.status(401).send({ error: 'Credenciales incorrectas' });
