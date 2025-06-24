@@ -64,6 +64,45 @@ app.get('/verificar/:id', async (req, res) => {
 });
 
 
+app.post('/verificar', async (req, res) => {
+  const { qrData } = req.body;
+
+  if (!qrData) {
+    return res.status(400).send({ valido: false, mensaje: 'No se recibió QR' });
+  }
+
+  try {
+    const doc = await compradoresRef.doc(qrData).get();
+
+    if (!doc.exists) {
+      return res.status(404).send({ valido: false, mensaje: 'Entrada no válida' });
+    }
+
+    const data = doc.data();
+
+    if (data.usado) {
+      return res.status(200).send({
+        valido: false,
+        mensaje: 'Esta entrada ya fue utilizada',
+        ...data
+      });
+    }
+
+    await compradoresRef.doc(qrData).update({ usado: true });
+
+    res.status(200).send({
+      valido: true,
+      mensaje: 'Entrada válida, acceso permitido',
+      ...data
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ valido: false, mensaje: 'Error al verificar' });
+  }
+});
+
+
 // Ruta para registrar un nuevo comprador
 app.post('/registrar', async (req, res) => {
   const { nombre, cedula, correo, tipoEntrada } = req.body;
