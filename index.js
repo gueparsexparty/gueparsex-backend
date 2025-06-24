@@ -226,6 +226,32 @@ attachments: [
 
 
 const PORT = process.env.PORT || 3000;
+
+app.post('/admin-login', async (req, res) => {
+  const { usuario, password } = req.body;
+
+  if (!usuario || !password) {
+    return res.status(400).send({ error: 'Faltan campos requeridos' });
+  }
+
+  try {
+    const adminsRef = db.collection('admins');
+    const snapshot = await adminsRef
+      .where('usuario', '==', usuario)
+      .where('password', '==', password)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(401).send({ error: 'Credenciales incorrectas' });
+    }
+
+    res.status(200).send({ mensaje: 'Login exitoso' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: 'Error al verificar el login' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en puerto ${PORT}`);
 });
