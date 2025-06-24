@@ -252,7 +252,8 @@ app.post('/admin-login', async (req, res) => {
       return res.status(401).send({ error: 'Credenciales incorrectas' });
     }
 
-    res.status(200).send({ mensaje: 'Login exitoso' });
+    res.status(200).send({ autenticado: true });
+	
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'Error al verificar el login' });
