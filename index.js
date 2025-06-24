@@ -18,11 +18,12 @@ app.use(cors());
 app.use(express.json());
 
 // Inicializar Firebase con la clave
-const serviceAccount = require('./firebaseKey.json');
+const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
+
 
 const db = admin.firestore();
 const compradoresRef = db.collection('compradores');
