@@ -16,10 +16,10 @@ const cors = require('cors');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const path = require('path');
 
-// Registra la fuente para los textos
-registerFont(path.join(__dirname, 'DroidSans-Bold.ttf'), { family: 'DroidSans' });
+// Registrar ambas fuentes
+registerFont(path.join(__dirname, 'DroidSans-Bold.ttf'), { family: 'DroidSansBold' });
+registerFont(path.join(__dirname, 'DroidSans.ttf'), { family: 'DroidSans' });
 
-// Función para generar la boleta con fondo, texto y QR
 async function generarBoletaVisual(nombre, cedula, tipoEntrada, idQR) {
   const ancho = 1080;
   const alto = 1920;
@@ -27,25 +27,39 @@ async function generarBoletaVisual(nombre, cedula, tipoEntrada, idQR) {
   const canvas = createCanvas(ancho, alto);
   const ctx = canvas.getContext('2d');
 
-  // Fondo
   const fondo = await loadImage(path.join(__dirname, 'boleta_base.jpg'));
   ctx.drawImage(fondo, 0, 0, ancho, alto);
 
-  // Texto: nombre, cédula, tipo
-  ctx.font = 'bold 48px DroidSans';
+  // Configurar estilos comunes
   ctx.fillStyle = '#ffffff';
+  const titulos = ['Nombre:', 'Cédula:', 'Tipo:'];
+  const datos = [nombre, cedula, tipoEntrada];
 
-  ctx.fillText(`Nombre: ${nombre}`, 100, 730);
-  ctx.fillText(`Cédula: ${cedula}`, 100, 800);
-  ctx.fillText(`Tipo: ${tipoEntrada}`, 100, 870);
+  const leftX = 150;
+  const rightX = 700;
+  let yBase = 730;
+  const lineHeight = 70;
 
-  // Generar QR como imagen
+  for (let i = 0; i < titulos.length; i++) {
+    ctx.font = '48px DroidSansBold';
+    ctx.textAlign = 'center';
+    ctx.fillText(titulos[i], leftX, yBase + i * lineHeight);
+
+    ctx.font = '48px DroidSans';
+    ctx.fillText(datos[i], rightX, yBase + i * lineHeight);
+  }
+
+  // Generar QR
   const qrDataUrl = await QRCode.toDataURL(idQR);
   const qrImage = await loadImage(qrDataUrl);
-  ctx.drawImage(qrImage, 290, 970, 500, 500); // posición centrada
 
-  return canvas.toBuffer(); // devolvemos el PNG en buffer
+  const qrX = 290;
+  const qrY = 1000; // posición más abajo
+  ctx.drawImage(qrImage, qrX, qrY, 500, 500);
+
+  return canvas.toBuffer();
 }
+
 
 
 const app = express();
