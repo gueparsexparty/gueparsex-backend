@@ -35,7 +35,7 @@ async function generarBoletaVisual(nombre, cedula, tipoEntrada, idQR) {
   const titulos = ['Nombre:', 'Cédula:', 'Tipo:'];
   const datos = [nombre, cedula, tipoEntrada];
 
-  const leftX = 150;
+  const leftX = 250;
   const rightX = 750;
   let yBase = 730;
   const lineHeight = 70;
@@ -54,7 +54,7 @@ async function generarBoletaVisual(nombre, cedula, tipoEntrada, idQR) {
   const qrImage = await loadImage(qrDataUrl);
 
   const qrX = 290;
-  const qrY = 1150; // posición más abajo
+  const qrY = 1180; // posición más abajo
   ctx.drawImage(qrImage, qrX, qrY, 500, 500);
 
   return canvas.toBuffer();
